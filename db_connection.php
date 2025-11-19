@@ -1,37 +1,46 @@
 <?php
 
-class Database {
+class Database
+{
+    
+    private static string $host = 'localhost';
+    private static string $dbName = 'Hotels';
+    private static string $user = 'root';
+    private static string $password = '';
 
-   private static $server = "localhost";
-   private static $user = "root";
-   private static $password = "";
-   private static $dbName = "Hotels";
+    private static ?PDO $connection = null;
 
-   private static $connex = null;
+    public static function connect(): PDO
+    {
+        if (self::$connection === null) {
+            $dsn = sprintf(
+                'mysql:host=%s;dbname=%s;charset=utf8mb4',
+                self::$host,
+                self::$dbName
+            );
 
-   public static function connect(){
+            try {
+                self::$connection = new PDO(
+                    $dsn,
+                    self::$user,
+                    self::$password,
+                    [
+                        PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    ]
+                );
+            } catch (PDOException $e) {
+                // En prod : log + message générique
+                http_response_code(500);
+                exit('Une erreur de connexion à la base de données est survenue.');
+            }
+        }
 
-      try 
-      {
-         self::$connex = new PDO("mysql:host=" . self::$server . ";dbname=" . self::$dbName ,self::$user ,self::$password);
-         self::$connex->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-         self::$connex->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE,PDO::FETCH_OBJ);
-      }
+        return self::$connection;
+    }
 
-      catch(PDOException $e)
-      {
-         echo "Connection failed: " . $e->getMessage();
-      }
-
-      return self::$connex ;
-   }
-
-   public static function disconnect () {
-      self::$connex = null;
-   }
-
+    public static function disconnect(): void
+    {
+        self::$connection = null;
+    }
 }
-
-?>
-
-
